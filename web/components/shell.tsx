@@ -2,13 +2,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutGrid, ListOrdered, PlusSquare, CheckCircle2, AlertTriangle, Settings, LogOut, Menu, X, Instagram } from "lucide-react";
+import { LayoutGrid, ListOrdered, PlusSquare, CheckCircle2, AlertTriangle, Settings, LogOut, Menu, X, Instagram, BarChart3 } from "lucide-react";
 import { api } from "@/lib/api";
 import { cn, Spinner } from "./ui";
 
 const NAV = [
   { href: "/", label: "Overview", icon: LayoutGrid }, { href: "/queue/", label: "Content Queue", icon: ListOrdered },
-  { href: "/create/", label: "Create Post", icon: PlusSquare }, { href: "/published/", label: "Published", icon: CheckCircle2 },
+  { href: "/create/", label: "Create Post", icon: PlusSquare }, { href: "/analytics/", label: "Analytics & Insights", icon: BarChart3 },
+  { href: "/published/", label: "Published", icon: CheckCircle2 },
   { href: "/failed/", label: "Failed Posts", icon: AlertTriangle }, { href: "/settings/", label: "Settings", icon: Settings },
 ];
 

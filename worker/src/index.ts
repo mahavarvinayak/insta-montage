@@ -1,7 +1,7 @@
 import { type Env, type PostRow, nowIso } from "./env";
 import { clearCookie, createSessionCookie, isAuthed, verifyPassword } from "./auth";
 import { scheduledTick } from "./publisher";
-import { igConfigured, igStatus } from "./instagram";
+import { igAnalytics, igConfigured, igStatus } from "./instagram";
 import { notify, telegramConfigured } from "./telegram";
 import { putMedia as storeMedia, getMediaResponse, deleteMediaFile } from "./storage";
 
@@ -62,12 +62,13 @@ async function clearLoginFailures(env: Env, ip: string) {
 /* ---------------- validation ---------------- */
 
 function validate(body: any, requireSchedule: boolean): string | null {
-  if (!["CAROUSEL", "REEL"].includes(body.media_type)) return "media_type must be CAROUSEL or REEL";
+  if (!["CAROUSEL", "REEL", "PHOTO"].includes(body.media_type)) return "media_type must be PHOTO, CAROUSEL or REEL";
   const urls = body.media_urls;
   if (!Array.isArray(urls)) return "media_urls must be an array";
   if (!urls.every((u: unknown) => typeof u === "string" && /^\/media\/.+|^https?:\/\//.test(u)))
     return "media_urls must be '/media/<key>' paths or https URLs";
-  if (body.media_type === "CAROUSEL" && (urls.length < 2 || urls.length > 10)) return "Carousel needs 2–10 images";
+  if (body.media_type === "PHOTO" && urls.length !== 1) return "Photo post needs exactly 1 image";
+  if (body.media_type === "CAROUSEL" && (urls.length < 1 || urls.length > 10)) return "Carousel needs 1–10 images";
   if (body.media_type === "REEL" && urls.length !== 1) return "Reel needs exactly 1 video";
   if (typeof body.caption === "string" && body.caption.length > 2200) return "Caption exceeds 2200 characters";
   if (((body.caption || "").match(/#\w+/g) || []).length > 30) return "Instagram allows max 30 hashtags";
@@ -157,6 +158,7 @@ async function api(req: Request, env: Env, url: URL): Promise<Response> {
 
   // ---- settings / status ----
   if (path === "/api/instagram/status") return json(await igStatus(env));
+  if (path === "/api/instagram/analytics") return json(await igAnalytics(env));
   if (path === "/api/config") return json({
     instagram: igConfigured(env), telegram: telegramConfigured(env),
     d1: !!env.DB, storage: !!env.MEDIA_KV, publicBaseUrl: env.PUBLIC_BASE_URL,

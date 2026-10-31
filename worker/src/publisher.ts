@@ -1,5 +1,5 @@
 import { type Env, type PostRow, nowIso } from "./env";
-import { IgError, publishCarousel, publishReel } from "./instagram";
+import { IgError, publishCarousel, publishPhoto, publishReel } from "./instagram";
 import { notify } from "./telegram";
 import { deleteMediaFile } from "./storage";
 
@@ -47,9 +47,11 @@ export async function runPublish(env: Env, post: PostRow) {
       );
     const urls = raw.map((u) => absoluteMediaUrl(env, u));
     const caption = post.caption || "";
-    const res = post.media_type === "CAROUSEL"
+    const res = post.media_type === "CAROUSEL" && urls.length > 1
       ? await publishCarousel(env, urls, caption, l)
-      : await publishReel(env, urls[0], caption, l);
+      : post.media_type === "REEL"
+      ? await publishReel(env, urls[0], caption, l)
+      : await publishPhoto(env, urls[0], caption, l);
     const now = nowIso();
     await env.DB.prepare(
       "UPDATE posts SET status='published', instagram_media_id=?, permalink=?, published_at=?, last_error=NULL, next_attempt_at=NULL, updated_at=? WHERE id=? AND status='publishing'"

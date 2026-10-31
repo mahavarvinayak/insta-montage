@@ -1,6 +1,6 @@
 export type Status = "draft" | "scheduled" | "publishing" | "published" | "failed" | "cancelled";
 export interface Post {
-  id: string; media_type: "CAROUSEL" | "REEL"; caption: string; media_urls: string[];
+  id: string; media_type: "CAROUSEL" | "REEL" | "PHOTO"; caption: string; media_urls: string[];
   scheduled_at: string | null; status: Status; attempts: number; next_attempt_at: string | null;
   instagram_media_id: string | null; permalink: string | null; last_error: string | null;
   published_at: string | null; created_at: string; updated_at: string;

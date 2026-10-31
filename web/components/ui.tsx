@@ -24,8 +24,12 @@ const STATUS_STYLE: Record<Status, string> = {
 };
 export const StatusBadge = ({ status }: { status: Status }) =>
   <span className={cn("inline-flex items-center h-5 px-2 rounded-full text-[11px] font-medium capitalize", STATUS_STYLE[status])}>{status}</span>;
-export const TypeBadge = ({ t }: { t: "CAROUSEL" | "REEL" }) =>
-  <span className="inline-flex items-center h-5 px-1.5 rounded border border-border text-[10px] font-semibold tracking-wide text-muted-foreground">{t}</span>;
+export const TypeBadge = ({ t }: { t: "CAROUSEL" | "REEL" | "PHOTO" | string }) => {
+  const color = t === "PHOTO" ? "text-blue-500 border-blue-500/30 bg-blue-500/10"
+    : t === "CAROUSEL" ? "text-purple-500 border-purple-500/30 bg-purple-500/10"
+    : "text-rose-500 border-rose-500/30 bg-rose-500/10";
+  return <span className={cn("inline-flex items-center h-5 px-1.5 rounded border text-[10px] font-semibold tracking-wide", color)}>{t}</span>;
+};
 
 export function Thumb({ url, className }: { url?: string; className?: string }) {
   if (!url) return <div className={cn("bg-muted rounded-md", className)} />;

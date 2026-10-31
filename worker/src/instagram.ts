@@ -82,6 +82,15 @@ async function publishContainer(env: Env, creationId: string) {
   return { mediaId: r.id as string, permalink };
 }
 
+export async function publishPhoto(env: Env, imageUrl: string, caption: string, log: (m: string) => Promise<void>) {
+  const params: Record<string, string> = { image_url: imageUrl };
+  if (caption && caption.trim()) params.caption = caption;
+  const c = await call(env, "POST", `/${env.IG_USER_ID}/media`, params);
+  await log(`Photo container ${c.id}`);
+  await waitFinished(env, c.id, 120_000, log);
+  return publishContainer(env, c.id);
+}
+
 export async function publishCarousel(env: Env, urls: string[], caption: string, log: (m: string) => Promise<void>) {
   if (urls.length < 2 || urls.length > 10) throw new IgError("Carousel needs 2–10 images.", false);
   const children: string[] = [];
@@ -113,4 +122,60 @@ export async function igStatus(env: Env) {
     const me = await call(env, "GET", `/${env.IG_USER_ID}`, { fields: "username,media_count" });
     return { configured: true, ok: true, username: me.username, media_count: me.media_count };
   } catch (e: any) { return { configured: true, ok: false, error: e.message }; }
+}
+
+export async function igAnalytics(env: Env) {
+  if (!igConfigured(env)) return { ok: false, error: "IG_USER_ID / IG_ACCESS_TOKEN not set." };
+  try {
+    const profile = await call(env, "GET", `/${env.IG_USER_ID}`, {
+      fields: "username,name,profile_picture_url,followers_count,follows_count,media_count",
+    });
+    const media = await call(env, "GET", `/${env.IG_USER_ID}/media`, {
+      fields: "id,caption,media_type,media_product_type,like_count,comments_count,timestamp,permalink,thumbnail_url,media_url",
+      limit: "50",
+    }).catch(() => ({ data: [] }));
+
+    const posts = (media.data || []).map((p: any) => ({
+      id: p.id,
+      caption: p.caption || "",
+      media_type: p.media_type,
+      media_product_type: p.media_product_type,
+      like_count: p.like_count || 0,
+      comments_count: p.comments_count || 0,
+      timestamp: p.timestamp,
+      permalink: p.permalink,
+      thumbnail_url: p.thumbnail_url || p.media_url,
+    }));
+
+    const totalLikes = posts.reduce((acc: number, p: any) => acc + (p.like_count || 0), 0);
+    const totalComments = posts.reduce((acc: number, p: any) => acc + (p.comments_count || 0), 0);
+    const followers = profile.followers_count || 0;
+    const avgEngagement = posts.length > 0
+      ? followers > 0
+        ? Number((((totalLikes + totalComments) / (followers * posts.length)) * 100).toFixed(2))
+        : Number(((totalLikes + totalComments) / posts.length).toFixed(1))
+      : 0;
+
+    return {
+      ok: true,
+      profile: {
+        username: profile.username,
+        name: profile.name,
+        profile_picture_url: profile.profile_picture_url,
+        followers_count: profile.followers_count,
+        follows_count: profile.follows_count,
+        media_count: profile.media_count,
+      },
+      summary: {
+        totalPosts: profile.media_count || posts.length,
+        recentPostsCount: posts.length,
+        totalLikes,
+        totalComments,
+        avgEngagement,
+      },
+      posts,
+    };
+  } catch (e: any) {
+    return { ok: false, error: e.message };
+  }
 }
