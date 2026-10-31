@@ -5,7 +5,7 @@ export class IgError extends Error {
 }
 export const igConfigured = (env: Env) => !!(env.IG_USER_ID && env.IG_ACCESS_TOKEN);
 const base = (env: Env) => {
-  const host = (env.IG_GRAPH_HOST || "graph.instagram.com").trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  const host = (env.IG_GRAPH_HOST || "graph.facebook.com").trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "");
   const version = (env.IG_API_VERSION || "v23.0").trim().replace(/^\/+|\/+$/g, "");
   return `https://${host}/${version}`;
 };
