@@ -38,18 +38,40 @@ async function videoMeta(file: File) {
   return { d: v.duration, w: v.videoWidth, h: v.videoHeight };
 }
 
-/** Instagram's publishing API only accepts JPEG, so convert PNG/WebP before uploading. */
+/** Instagram's publishing API only accepts JPEG, and requires aspect ratio between 4:5 (0.8) and 1.91:1.
+ * We auto-convert and auto-pad any oversized/odd aspect ratio to ensure Instagram NEVER rejects it. */
 async function toJpeg(file: File): Promise<File> {
-  const isJpeg = file.type === "image/jpeg" || /\.jpe?g$/i.test(file.name);
-  if (isJpeg && file.size <= MAX_IMAGE_MB * 1024 * 1024) return file;
   const bitmap = await createImageBitmap(file);
+  const w = bitmap.width;
+  const h = bitmap.height;
+  const r = w / h;
+
+  let targetW = w;
+  let targetH = h;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  // If too tall (taller than 4:5, e.g. 9:16 phone screenshot), pad width to reach 4:5 portrait
+  if (r < 0.8) {
+    targetW = Math.round(h * 0.8);
+    targetH = h;
+    offsetX = Math.round((targetW - w) / 2);
+  } else if (r > 1.91) {
+    targetW = w;
+    targetH = Math.round(w / 1.91);
+    offsetY = Math.round((targetH - h) / 2);
+  }
+
   const canvas = document.createElement("canvas");
-  canvas.width = bitmap.width; canvas.height = bitmap.height;
+  canvas.width = targetW;
+  canvas.height = targetH;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas is not available in this browser");
-  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(bitmap, 0, 0);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, offsetX, offsetY);
   bitmap.close();
+
   const quality = file.size > MAX_IMAGE_MB * 1024 * 1024 ? 0.85 : 0.92;
   const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", quality));
   if (!blob) throw new Error("Could not convert image to JPEG");
@@ -210,8 +232,7 @@ function Editor() {
           if (!isImg) { errs.push(`${raw.name}: must be JPEG, PNG, or WebP`); continue; }
           file = await toJpeg(raw);
           if (file.size > MAX_IMAGE_MB * 1024 * 1024) { errs.push(`${raw.name}: exceeds ${MAX_IMAGE_MB} MB`); continue; }
-          const { w, h } = await imageDims(file); const r = w / h;
-          if (r < 0.8 - 0.01 || r > 1.91 + 0.01) { errs.push(`${raw.name}: aspect ratio outside Instagram's 4:5 to 1.91:1 range`); continue; }
+          const { w } = await imageDims(file);
           if (w < 320) { errs.push(`${raw.name}: width must be at least 320px`); continue; }
         } else if (kind === "REEL") {
           const isMp4 = raw.type === "video/mp4" || /\.mp4$/i.test(raw.name);
