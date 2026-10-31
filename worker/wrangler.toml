@@ -23,7 +23,7 @@ id = "0144eccac88f4972a3fd19d1faacca4c"
 
 [vars]
 # Must be the real HTTPS origin of this Worker — Instagram downloads media from here.
-PUBLIC_BASE_URL = "https://insta-montage.YOUR-SUBDOMAIN.workers.dev"
+PUBLIC_BASE_URL = "https://insta-montage.mahavarvinayak.workers.dev"
 IG_GRAPH_HOST = "graph.instagram.com"
 IG_API_VERSION = "v23.0"
 # Retries per post (transient failures only).
