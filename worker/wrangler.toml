@@ -14,12 +14,12 @@ crons = ["* * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "insta-montage-db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "7f8cfa39-df29-4975-bdf8-8db1f8b1a33d"
 migrations_dir = "migrations"
 
-[[r2_buckets]]
-binding = "MEDIA"
-bucket_name = "insta-montage-media"
+[[kv_namespaces]]
+binding = "MEDIA_KV"
+id = "0144eccac88f4972a3fd19d1faacca4c"
 
 [vars]
 # Must be the real HTTPS origin of this Worker — Instagram downloads media from here.

@@ -20,7 +20,7 @@ export default function Settings() {
     <div className="card px-4 divide-y divide-border mb-4">
       <Row label="Instagram account" ok={!!ig?.ok} detail={ig?.ok ? `@${ig.username}` : ig?.error} />
       <Row label="Meta API token (IG_USER_ID, IG_ACCESS_TOKEN)" ok={cfg.instagram} detail={`Graph host: ${cfg.graphHost} · API ${cfg.apiVersion}`} />
-      <Row label="Cloudflare D1 database" ok={cfg.d1} /><Row label="Cloudflare R2 media bucket" ok={cfg.r2} />
+      <Row label="Cloudflare D1 database" ok={cfg.d1} /><Row label="Cloudflare Media Storage (KV)" ok={cfg.storage} detail="Zero-cost, no credit card required" />
       <Row label="Public media URL (PUBLIC_BASE_URL)" ok={cfg.publicBaseUrlOk} detail={cfg.publicBaseUrl} />
       <Row label="Telegram notifications" ok={cfg.telegram} detail="TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID" />
       <div className="py-3 text-[12px] text-muted-foreground">Max attempts: {cfg.maxAttempts} · Scheduler: every minute, {cfg.cronBatch} post per tick · Retention: auto-clean after {cfg.retentionHours || 48}h · Uploads: JPEG {cfg.uploadLimitMb?.image} MB, MP4 {cfg.uploadLimitMb?.video} MB</div>

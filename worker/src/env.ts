@@ -1,6 +1,6 @@
 export interface Env {
   DB: D1Database;
-  MEDIA: R2Bucket;
+  MEDIA_KV: KVNamespace;
   ASSETS: Fetcher;
   PUBLIC_BASE_URL: string;
   IG_GRAPH_HOST: string;

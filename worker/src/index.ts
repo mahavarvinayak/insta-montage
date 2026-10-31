@@ -3,6 +3,7 @@ import { clearCookie, createSessionCookie, isAuthed, verifyPassword } from "./au
 import { scheduledTick } from "./publisher";
 import { igConfigured, igStatus } from "./instagram";
 import { notify, telegramConfigured } from "./telegram";
+import { putMedia as storeMedia, getMediaResponse, deleteMediaFile } from "./storage";
 
 const json = (data: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json", "cache-control": "no-store", ...headers } });
@@ -80,21 +81,6 @@ function validate(body: any, requireSchedule: boolean): string | null {
 
 /* ---------------- uploads ---------------- */
 
-async function putMedia(env: Env, type: string, size: number, body: ReadableStream | Blob) {
-  const isImg = type === IMG_TYPE;
-  const limit = isImg ? MAX_IMG_BYTES : MAX_VID_BYTES;
-  if (size > limit) return err(`File is too large (${(size / 1048576).toFixed(1)} MB). Max ${limit / 1048576} MB.`, 413);
-  const key = `${new Date().toISOString().slice(0, 7)}/${crypto.randomUUID()}.${isImg ? "jpg" : "mp4"}`;
-  await env.MEDIA.put(key, body, { httpMetadata: { contentType: type } });
-  const base = (env.PUBLIC_BASE_URL || "").replace(/\/+$/, "");
-  return json({
-    key,
-    url: `/media/${key}`, // relative: works on any host (local dev included)
-    absolute_url: /^https:\/\//i.test(base) ? `${base}/media/${key}` : null,
-    type: isImg ? "image" : "video",
-  });
-}
-
 async function upload(req: Request, env: Env): Promise<Response> {
   let ct = (req.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
   if (ct === "image/jpg") ct = IMG_TYPE;
@@ -107,14 +93,20 @@ async function upload(req: Request, env: Env): Promise<Response> {
     let type = (file.type || "").toLowerCase();
     if (type === "image/jpg") type = IMG_TYPE;
     if (type !== IMG_TYPE && type !== VID_TYPE) return err("Only JPEG images or MP4 videos are allowed");
-    return putMedia(env, type, file.size, file.stream());
+    const limit = type === IMG_TYPE ? MAX_IMG_BYTES : MAX_VID_BYTES;
+    if (file.size > limit) return err(`File is too large (${(file.size / 1048576).toFixed(1)} MB). Max ${limit / 1048576} MB.`, 413);
+    const res = await storeMedia(env, type, file.size, file);
+    return json(res);
   }
 
-  // Preferred path: stream the raw body straight into R2 (no 128 MB memory buffering).
+  // Raw body stream
   if (ct !== IMG_TYPE && ct !== VID_TYPE) return err("Only JPEG images or MP4 videos are allowed");
   if (!req.body) return err("Empty upload");
   const len = Number(req.headers.get("content-length") || 0);
-  return putMedia(env, ct, Number.isFinite(len) ? Math.max(0, len) : 0, req.body);
+  const limit = ct === IMG_TYPE ? MAX_IMG_BYTES : MAX_VID_BYTES;
+  if (len > limit) return err(`File is too large (${(len / 1048576).toFixed(1)} MB). Max ${limit / 1048576} MB.`, 413);
+  const res = await storeMedia(env, ct, len, req.body);
+  return json(res);
 }
 
 /* ---------------- api ---------------- */
@@ -167,7 +159,7 @@ async function api(req: Request, env: Env, url: URL): Promise<Response> {
   if (path === "/api/instagram/status") return json(await igStatus(env));
   if (path === "/api/config") return json({
     instagram: igConfigured(env), telegram: telegramConfigured(env),
-    d1: !!env.DB, r2: !!env.MEDIA, publicBaseUrl: env.PUBLIC_BASE_URL,
+    d1: !!env.DB, storage: !!env.MEDIA_KV, publicBaseUrl: env.PUBLIC_BASE_URL,
     publicBaseUrlOk: /^https:\/\//.test(env.PUBLIC_BASE_URL || "") && !/YOUR-SUBDOMAIN/.test(env.PUBLIC_BASE_URL || ""),
     graphHost: env.IG_GRAPH_HOST, apiVersion: env.IG_API_VERSION || "v23.0",
     maxAttempts: Number(env.MAX_ATTEMPTS || 5), cronBatch: Number(env.CRON_BATCH || 1),
@@ -234,10 +226,10 @@ async function api(req: Request, env: Env, url: URL): Promise<Response> {
       let urls: string[] = [];
       try { urls = JSON.parse(post.media_urls); } catch { urls = []; }
       await env.DB.prepare("UPDATE posts SET status='cancelled', updated_at=? WHERE id=?").bind(nowIso(), id).run();
-      // Best-effort R2 cleanup so cancelled posts don't leak storage.
+      // Best-effort storage cleanup so cancelled posts don't leak storage.
       await Promise.allSettled(urls.map((u) => {
         const mt = u.match(/\/media\/(.+)$/);
-        return mt ? env.MEDIA.delete(decodeURIComponent(mt[1])) : Promise.resolve();
+        return mt ? deleteMediaFile(env, decodeURIComponent(mt[1])) : Promise.resolve();
       }));
       return json({ ok: true });
     }
@@ -272,22 +264,7 @@ export default {
     if (url.pathname.startsWith("/media/") && (req.method === "GET" || req.method === "HEAD")) {
       const key = decodeURIComponent(url.pathname.slice(7));
       if (!key) return new Response("Not found", { status: 404 });
-      const obj = await env.MEDIA.get(key, { range: req.headers });
-      if (!obj) return new Response("Not found", { status: 404 });
-      const h = new Headers();
-      obj.writeHttpMetadata(h);
-      h.set("etag", obj.httpEtag);
-      h.set("cache-control", "public, max-age=86400");
-      h.set("accept-ranges", "bytes");
-      h.set("access-control-allow-origin", "*");
-      h.set("content-length", String(obj.size));
-      const range = (obj as R2ObjectBody & { range?: { offset: number; length: number } }).range;
-      if (range && req.headers.has("range")) {
-        h.set("content-range", `bytes ${range.offset}-${range.offset + range.length - 1}/${obj.size}`);
-        h.set("content-length", String(range.length));
-        return new Response(req.method === "HEAD" ? null : obj.body, { status: 206, headers: h });
-      }
-      return new Response(req.method === "HEAD" ? null : obj.body, { headers: h });
+      return getMediaResponse(req, env, key);
     }
 
     if (url.pathname.startsWith("/api/")) {

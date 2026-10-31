@@ -1,6 +1,7 @@
 import { type Env, type PostRow, nowIso } from "./env";
 import { IgError, publishCarousel, publishReel } from "./instagram";
 import { notify } from "./telegram";
+import { deleteMediaFile } from "./storage";
 
 const maxAttempts = (env: Env) => Math.max(1, Number(env.MAX_ATTEMPTS || 5) || 5);
 
@@ -88,10 +89,10 @@ export async function cleanupOldPosts(env: Env) {
     for (const post of old.results) {
       let urls: string[] = [];
       try { urls = JSON.parse(post.media_urls); } catch { urls = []; }
-      // Delete media from R2 bucket so storage doesn't accumulate
+      // Delete media from KV so storage doesn't accumulate
       await Promise.allSettled(urls.map((u) => {
         const mt = u.match(/\/media\/(.+)$/);
-        return mt ? env.MEDIA.delete(decodeURIComponent(mt[1])) : Promise.resolve();
+        return mt ? deleteMediaFile(env, decodeURIComponent(mt[1])) : Promise.resolve();
       }));
       // Remove logs and post record
       await env.DB.prepare("DELETE FROM publish_logs WHERE post_id=?").bind(post.id).run();
