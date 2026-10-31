@@ -1,7 +1,7 @@
 "use client";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Film, GripVertical, Image as ImageIcon, Images, Trash2, UploadCloud, Type, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Film, GripVertical, Image as ImageIcon, Images, Trash2, UploadCloud, Type, Sparkles, BarChart3 } from "lucide-react";
 import { api, istToUtc, utcToIst, type Post } from "@/lib/api";
 import { Alert, Button, PageHeader, Spinner, cn } from "@/components/ui";
 
@@ -458,7 +458,20 @@ function Editor() {
           {/* Caption & Schedule */}
           <div className="card p-4 space-y-4">
             <div>
-              <label className="label">Caption & hashtags</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="label mb-0">Caption & hashtags</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const pollTemplate = `\n\n📊 QUICK POLL:\nWhich one do you prefer?\n🅰️ Option 1\n🅱️ Option 2\n\n👇 Drop your vote 'A' or 'B' in the comments!`;
+                    setCaption((c) => (c ? c + pollTemplate : pollTemplate.trim()));
+                  }}
+                  className="text-[11px] text-primary hover:underline inline-flex items-center gap-1 font-medium"
+                >
+                  <BarChart3 className="h-3 w-3" />
+                  + Insert Poll Template
+                </button>
+              </div>
               <textarea
                 className="input h-32 py-2 resize-y"
                 value={caption}
@@ -494,7 +507,12 @@ function Editor() {
         {/* Live Instagram Mobile Mockup Preview */}
         <div className="lg:col-span-2">
           <div className="card p-3 sticky top-6">
-            <p className="text-[12px] font-medium text-muted-foreground mb-2">Live Instagram Preview</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[12px] font-medium text-muted-foreground">Live Instagram Preview</p>
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                {kind === "REEL" ? "Reel 9:16" : "Feed Portrait 4:5"}
+              </span>
+            </div>
             <div className="flex items-center gap-2 mb-2">
               <div className="h-6 w-6 rounded-full bg-primary/20 text-primary grid place-items-center text-[10px] font-bold">
                 {username.slice(0, 1).toUpperCase()}
@@ -502,12 +520,12 @@ function Editor() {
               <span className="text-[12px] font-semibold">@{username}</span>
             </div>
 
-            <div className={cn("relative bg-muted rounded-md overflow-hidden", kind === "REEL" ? "aspect-[9/16]" : "aspect-[1/1]")}>
+            <div className={cn("relative bg-zinc-950 rounded-md overflow-hidden flex items-center justify-center", kind === "REEL" ? "aspect-[9/16]" : "aspect-[4/5]")}>
               {preview?.url ? (
                 kind === "REEL" ? (
-                  <video key={preview.url} src={preview.url} controls playsInline className="h-full w-full object-cover" />
+                  <video key={preview.url} src={preview.url} controls playsInline className="h-full w-full object-contain" />
                 ) : (
-                  <img src={preview.url} alt="" className="h-full w-full object-cover" />
+                  <img src={preview.url} alt="" className="h-full w-full object-contain" />
                 )
               ) : (
                 <div className="h-full grid place-items-center text-[12px] text-muted-foreground p-4 text-center">
