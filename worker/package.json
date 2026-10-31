@@ -1,0 +1,17 @@
+{
+  "name": "insta-montage-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply insta-montage-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply insta-montage-db --remote",
+    "hash-password": "node scripts/hash-password.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261023.1",
+    "typescript": "^5.6.0",
+    "wrangler": "^4.156.0"
+  }
+}

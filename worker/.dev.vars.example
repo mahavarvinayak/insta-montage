@@ -1,0 +1,21 @@
+# Copy to worker/.dev.vars (never commit). Values here override wrangler.toml [vars] locally.
+
+# --- Dashboard admin ---
+ADMIN_EMAIL=you@example.com
+ADMIN_PASSWORD_HASH=pbkdf2$100000$...
+# generate with: npm run hash-password -- 'your-strong-password'
+SESSION_SECRET=change-me-to-a-long-random-string
+
+# --- Instagram (official Meta Graph API) ---
+IG_USER_ID=
+IG_ACCESS_TOKEN=
+
+# --- Telegram (optional) ---
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+
+# --- Media ---
+# Browser previews use relative /media/<key> paths, so they work on localhost.
+# Instagram must still download from the deployed Worker, so real publishing
+# only works once PUBLIC_BASE_URL points at your https://<name>.<subdomain>.workers.dev
+# PUBLIC_BASE_URL=https://insta-montage.your-subdomain.workers.dev

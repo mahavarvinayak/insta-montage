@@ -1,0 +1,32 @@
+name = "insta-montage"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[assets]
+directory = "../web/out"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = true
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "insta-montage-db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "insta-montage-media"
+
+[vars]
+# Must be the real HTTPS origin of this Worker — Instagram downloads media from here.
+PUBLIC_BASE_URL = "https://insta-montage.YOUR-SUBDOMAIN.workers.dev"
+IG_GRAPH_HOST = "graph.instagram.com"
+IG_API_VERSION = "v23.0"
+# Retries per post (transient failures only).
+MAX_ATTEMPTS = "5"
+# Posts published per cron tick. Keep at 1 on the Workers Free plan (50 subrequests).
+CRON_BATCH = "1"

@@ -1,0 +1,14 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+:root {
+  --background: 40 20% 98.5%; --foreground: 222 22% 12%; --card: 0 0% 100%;
+  --muted: 220 14% 96%; --muted-foreground: 220 9% 46%; --border: 220 13% 91%;
+  --primary: 214 84% 50%; --primary-foreground: 0 0% 100%;
+  --success: 152 60% 36%; --warning: 36 92% 44%; --destructive: 0 72% 50%;
+}
+body { @apply bg-background text-foreground antialiased text-[14px]; }
+@layer components {
+  .card { @apply bg-card border border-border rounded-lg; }
+  .input { @apply w-full h-9 rounded-md border border-border bg-card px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15; }
+  .label { @apply text-xs font-medium text-muted-foreground mb-1.5 block; }
+  .h1 { @apply text-xl font-semibold tracking-tight; }
+}
