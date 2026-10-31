@@ -77,8 +77,36 @@ export async function runPublish(env: Env, post: PostRow) {
   }
 }
 
+export async function cleanupOldPosts(env: Env) {
+  try {
+    const hours = Math.max(1, Number(env.RETENTION_HOURS || 48) || 48);
+    const cutoff = new Date(Date.now() - hours * 3600_000).toISOString();
+    const old = await env.DB.prepare(
+      `SELECT id, media_urls FROM posts WHERE (status='published' AND published_at <= ?) OR (status='cancelled' AND updated_at <= ?) LIMIT 20`
+    ).bind(cutoff, cutoff).all<{ id: string; media_urls: string }>();
+
+    for (const post of old.results) {
+      let urls: string[] = [];
+      try { urls = JSON.parse(post.media_urls); } catch { urls = []; }
+      // Delete media from R2 bucket so storage doesn't accumulate
+      await Promise.allSettled(urls.map((u) => {
+        const mt = u.match(/\/media\/(.+)$/);
+        return mt ? env.MEDIA.delete(decodeURIComponent(mt[1])) : Promise.resolve();
+      }));
+      // Remove logs and post record
+      await env.DB.prepare("DELETE FROM publish_logs WHERE post_id=?").bind(post.id).run();
+      await env.DB.prepare("DELETE FROM posts WHERE id=?").bind(post.id).run();
+    }
+  } catch (e: any) {
+    console.error("Auto-cleanup error:", e);
+  }
+}
+
 export async function scheduledTick(env: Env) {
   const now = nowIso();
+
+  // Automatically delete published posts and R2 media older than 2 days (48h)
+  await cleanupOldPosts(env);
 
   // Recover posts stuck in 'publishing' (worker crashed / hit a runtime limit).
   // 20 minutes is longer than the slowest legitimate Reel (8 min).

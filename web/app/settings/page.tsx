@@ -23,7 +23,7 @@ export default function Settings() {
       <Row label="Cloudflare D1 database" ok={cfg.d1} /><Row label="Cloudflare R2 media bucket" ok={cfg.r2} />
       <Row label="Public media URL (PUBLIC_BASE_URL)" ok={cfg.publicBaseUrlOk} detail={cfg.publicBaseUrl} />
       <Row label="Telegram notifications" ok={cfg.telegram} detail="TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID" />
-      <div className="py-3 text-[12px] text-muted-foreground">Max attempts: {cfg.maxAttempts} · Scheduler: every minute, {cfg.cronBatch} post per tick · Uploads: JPEG {cfg.uploadLimitMb?.image} MB, MP4 {cfg.uploadLimitMb?.video} MB</div>
+      <div className="py-3 text-[12px] text-muted-foreground">Max attempts: {cfg.maxAttempts} · Scheduler: every minute, {cfg.cronBatch} post per tick · Retention: auto-clean after {cfg.retentionHours || 48}h · Uploads: JPEG {cfg.uploadLimitMb?.image} MB, MP4 {cfg.uploadLimitMb?.video} MB</div>
     </div>
     <p className="text-[12px] text-muted-foreground mb-4">Long-lived Instagram tokens expire after about 60 days. If publishing starts failing with “code 190”, refresh the token with <code>wrangler secret put IG_ACCESS_TOKEN</code>.</p>
     <div className="flex gap-2"><Button loading={busy === "ig"} onClick={testIg}>Test Instagram connection</Button><Button loading={busy === "tg"} onClick={testTg}>Send test notification</Button></div></>;

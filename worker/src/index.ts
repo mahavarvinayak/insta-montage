@@ -171,6 +171,7 @@ async function api(req: Request, env: Env, url: URL): Promise<Response> {
     publicBaseUrlOk: /^https:\/\//.test(env.PUBLIC_BASE_URL || "") && !/YOUR-SUBDOMAIN/.test(env.PUBLIC_BASE_URL || ""),
     graphHost: env.IG_GRAPH_HOST, apiVersion: env.IG_API_VERSION || "v23.0",
     maxAttempts: Number(env.MAX_ATTEMPTS || 5), cronBatch: Number(env.CRON_BATCH || 1),
+    retentionHours: Number(env.RETENTION_HOURS || 48),
     uploadLimitMb: { image: MAX_IMG_BYTES / 1048576, video: MAX_VID_BYTES / 1048576 },
   });
   if (path === "/api/telegram/test" && m === "POST") {

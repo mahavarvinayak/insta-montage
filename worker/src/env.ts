@@ -7,6 +7,7 @@ export interface Env {
   IG_API_VERSION: string;
   MAX_ATTEMPTS: string;
   CRON_BATCH?: string;
+  RETENTION_HOURS?: string;
   ADMIN_EMAIL?: string;
   ADMIN_PASSWORD_HASH?: string;
   SESSION_SECRET?: string;

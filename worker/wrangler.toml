@@ -30,3 +30,5 @@ IG_API_VERSION = "v23.0"
 MAX_ATTEMPTS = "5"
 # Posts published per cron tick. Keep at 1 on the Workers Free plan (50 subrequests).
 CRON_BATCH = "1"
+# Auto-delete published posts and R2 media files after 2 days (48 hours)
+RETENTION_HOURS = "48"
