@@ -172,6 +172,17 @@ async function api(req: Request, env: Env, url: URL): Promise<Response> {
     const r = await notify(env, "🔔 Test notification from Insta Montage");
     return r.ok ? json(r) : err(r.error!, 400);
   }
+  if (path === "/api/internal/replace-media" && m === "POST") {
+    const b = await req.json<{ key: string; base64: string }>();
+    if (!b?.key || !b?.base64) return err("Invalid payload");
+    const raw = atob(b.base64);
+    const buf = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+    const meta = { size: buf.byteLength, type: "image/jpeg", chunks: 1, createdAt: nowIso() };
+    await env.MEDIA_KV.put(`meta:${b.key}`, JSON.stringify(meta), { expirationTtl: 172800 });
+    await env.MEDIA_KV.put(`data:${b.key}:0`, buf, { expirationTtl: 172800 });
+    return json({ ok: true, key: b.key, size: buf.byteLength });
+  }
 
   // ---- posts ----
   if (path === "/api/posts" && m === "GET") {

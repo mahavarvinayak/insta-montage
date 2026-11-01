@@ -62,14 +62,25 @@ async function toJpeg(file: File): Promise<File> {
     offsetY = Math.round((targetH - h) / 2);
   }
 
+  // Downscale if oversized (Instagram recommended max width: 1440px, max height: 1800px)
+  let finalW = targetW;
+  let finalH = targetH;
+  if (finalW > 1440 || finalH > 1800) {
+    const scale = Math.min(1440 / finalW, 1800 / finalH);
+    finalW = Math.round(finalW * scale);
+    finalH = Math.round(finalH * scale);
+  }
+
   const canvas = document.createElement("canvas");
-  canvas.width = targetW;
-  canvas.height = targetH;
+  canvas.width = finalW;
+  canvas.height = finalH;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas is not available in this browser");
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(bitmap, offsetX, offsetY);
+  ctx.fillRect(0, 0, finalW, finalH);
+
+  const drawScale = finalW / targetW;
+  ctx.drawImage(bitmap, offsetX * drawScale, offsetY * drawScale, w * drawScale, h * drawScale);
   bitmap.close();
 
   const quality = file.size > MAX_IMAGE_MB * 1024 * 1024 ? 0.85 : 0.92;

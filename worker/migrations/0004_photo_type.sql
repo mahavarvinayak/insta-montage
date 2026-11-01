@@ -25,3 +25,4 @@ ALTER TABLE posts_new RENAME TO posts;
 
 CREATE INDEX IF NOT EXISTS idx_posts_status_sched ON posts(status, scheduled_at);
 CREATE INDEX IF NOT EXISTS idx_posts_cleanup ON posts(status, published_at, updated_at);
+

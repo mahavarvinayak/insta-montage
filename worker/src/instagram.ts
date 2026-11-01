@@ -12,7 +12,7 @@ const base = (env: Env) => {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Meta error codes that are worth retrying: 1/2 (temporary), 4/17/32/341/613 (rate limit), 9007 (media not ready)
-const TRANSIENT_CODES = new Set([1, 2, 4, 17, 32, 341, 613, 9007]);
+const TRANSIENT_CODES = new Set([1, 2, 4, 17, 32, 100, 341, 613, 9007, 2207032, 2207004, 2207050]);
 
 async function call(env: Env, method: "GET" | "POST", path: string, params: Record<string, string> = {}) {
   if (!igConfigured(env)) throw new IgError("Instagram is not configured (IG_USER_ID / IG_ACCESS_TOKEN missing).", false);
@@ -49,8 +49,10 @@ async function waitFinished(env: Env, containerId: string, timeoutMs: number, lo
       throw err;
     }
     if (s.status_code === "FINISHED" || s.status_code === "PUBLISHED") return;
-    if (s.status_code === "ERROR" || s.status_code === "EXPIRED")
-      throw new IgError(`Container ${containerId} ${s.status_code}: ${s.status || ""}`, false);
+    if (s.status_code === "ERROR" || s.status_code === "EXPIRED") {
+      const isTransient = /2207032|2207004|2207050|replica|processing|retry/i.test(s.status || "");
+      throw new IgError(`Container ${containerId} ${s.status_code}: ${s.status || ""}`, isTransient);
+    }
     await sleep(delay); delay = Math.min(delay * 1.5, 15000);
   }
   await log(`Container ${containerId} still processing after ${Math.round(timeoutMs / 1000)}s`);
@@ -102,6 +104,9 @@ export async function publishCarousel(env: Env, urls: string[], caption: string,
   const params: Record<string, string> = { media_type: "CAROUSEL", children: children.join(",") };
   if (caption && caption.trim()) params.caption = caption;
   const parent = await call(env, "POST", `/${env.IG_USER_ID}/media`, params);
+  if (!parent || !parent.id || parent.id === "0" || parent.id === 0) {
+    throw new IgError(`Meta returned invalid carousel container ID (${parent?.id}). Child item processing may still be in progress on Meta's replica servers.`, true);
+  }
   await log(`Carousel container ${parent.id}`);
   await waitFinished(env, parent.id, 180_000, log);
   return publishContainer(env, parent.id);
