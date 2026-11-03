@@ -160,3 +160,4 @@ export async function processMediaFile(filePath: string): Promise<MediaProcessRe
     `Unsupported file format: "${filePath}". Supported formats: Images (JPEG, PNG, WebP) or Videos (MP4, MOV).`
   );
 }
+

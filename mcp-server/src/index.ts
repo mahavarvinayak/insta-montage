@@ -294,3 +294,4 @@ main().catch((err) => {
   console.error("Fatal error starting Insta Montage MCP server:", err);
   process.exit(1);
 });
+

@@ -257,3 +257,4 @@ export class InstaMontageClient {
     return this.request<any>("/api/stats");
   }
 }
+

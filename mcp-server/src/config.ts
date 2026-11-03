@@ -13,3 +13,4 @@ export function getConfig(): AppConfig {
 
   return { baseUrl, email, password, timezone };
 }
+

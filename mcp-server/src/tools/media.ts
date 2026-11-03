@@ -117,3 +117,4 @@ export async function uploadLocalMediaFile(client: InstaMontageClient, filePath:
     dimensions: processed.width && processed.height ? `${processed.width}x${processed.height}` : undefined,
   };
 }
+

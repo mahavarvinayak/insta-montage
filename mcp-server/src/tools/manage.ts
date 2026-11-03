@@ -51,3 +51,4 @@ export async function updateExistingPost(
   }
   return client.updatePost(postId, payload);
 }
+
