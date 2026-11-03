@@ -3,9 +3,19 @@
 Private, self-hosted dashboard that schedules and auto-publishes Instagram carousels & Reels through the **official Meta Instagram API**. One Cloudflare Worker serves the dashboard (Next.js static export), the API, R2 media, and the every-minute cron — so your laptop can stay off.
 
 ```
-web/     Next.js 14 + TypeScript + Tailwind dashboard (static export -> web/out)
-worker/  Cloudflare Worker: API, auth, R2, D1, cron scheduler, Meta + Telegram services
+web/         Next.js 14 + TypeScript + Tailwind dashboard (static export -> web/out)
+worker/      Cloudflare Worker: API, auth, KV, D1, cron scheduler, Meta + Telegram services
+mcp-server/  Model Context Protocol (MCP) server for Claude, Cursor & IDE AI Agents
 ```
+
+## 🤖 MCP Server (AI Agent Integration)
+Control your entire Instagram pipeline through Claude Desktop, Cursor, or any MCP-compatible AI:
+- **1-Click Folder Automation**: Point an AI to a local folder — it auto-optimizes images, uploads them, and schedules all posts.
+- **Queue & Post Management**: Create, edit, retry, or cancel posts directly via prompts.
+- **Live Analytics**: Fetch follower counts, engagement rate, and post performance.
+
+👉 **[View MCP Setup Guide](mcp-server/README.md)**
+
 
 ## 1. Prerequisites
 - Node 20+, a Cloudflare account, `npm i -g wrangler` and `wrangler login`

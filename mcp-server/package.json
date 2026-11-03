@@ -1,0 +1,24 @@
+{
+  "name": "insta-montage-mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) server for Insta Montage — automated Instagram scheduling, media optimization, and analytics for AI Agents.",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "insta-montage-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "sharp": "^0.35.5",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  }
+}
