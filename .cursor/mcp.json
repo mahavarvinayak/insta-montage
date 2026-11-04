@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "insta-montage": {
+      "command": "node",
+      "args": [
+        "c:/Users/mahav/OneDrive - Government Engineering College, Dahod/Desktop/insta-montage/mcp-server/dist/index.js"
+      ],
+      "env": {
+        "INSTA_MONTAGE_URL": "https://insta-montage.mahavarvinayak.workers.dev",
+        "INSTA_MONTAGE_EMAIL": "admin@instamontage.local",
+        "INSTA_MONTAGE_PASSWORD": "Vinayak#Montage!2026Secure",
+        "TIMEZONE": "Asia/Kolkata"
+      }
+    }
+  }
+}
